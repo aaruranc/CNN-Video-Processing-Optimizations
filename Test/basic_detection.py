@@ -134,6 +134,7 @@ if __name__ == '__main__':
 	  # plt.imshow(image_np)
 	  box_ctr = 0;
 	  box_count = output_dict['num_detections']
+	  print(output_dict)
 	  while box_ctr < box_count :
 		  new_row = []
 		  new_row.append(image_path)
@@ -145,8 +146,10 @@ if __name__ == '__main__':
 		  box_ctr +=1
 		  print(new_row)
 
-	with open('detect.csv', "w") as wo :
-		for row in out_lines :
-			wo.write(delim.join(row))
-			wo.write('\n')
+	print(out_lines)
+
+	# with open('detect.csv', "w") as wo :
+	# 	for row in out_lines :
+	# 		wo.write(delim.join(row))
+	# 		wo.write('\n')
 
