@@ -11,18 +11,15 @@ from collections import defaultdict
 from io import StringIO
 from matplotlib import pyplot as plt
 from PIL import Image
-
-# This is needed since the notebook is stored in the object_detection folder.
-sys.path.append("..")
 from object_detection.utils import ops as utils_ops
 
 if StrictVersion(tf.__version__) < StrictVersion('1.9.0'):
   raise ImportError('Please upgrade your TensorFlow installation to v1.9.* or later!')
 
-from utils import label_map_util
-from utils import visualization_utils as vis_util
+from object_detection.utils import label_map_util
+from object_detection.utils import visualization_utils as vis_util
 
-#HELPER CODE
+#HELPERS
 def load_image_into_numpy_array(image):
   (im_width, im_height) = image.size
   return np.array(image.getdata()).reshape(
@@ -78,25 +75,14 @@ def run_inference_for_single_image(image, graph):
 
 if __name__ == '__main__':
 
-	# What model to download.
-	MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
-	MODEL_FILE = MODEL_NAME + '.tar.gz'
-	DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
-
+	# Faster R-CNN Model
+	MODEL_NAME = 'faster_rcnn_resnet50_coco_2018_01_28'
+	
 	# Path to frozen detection graph. This is the actual model that is used for the object detection.
-	PATH_TO_FROZEN_GRAPH = MODEL_NAME + '/frozen_inference_graph.pb'
+	PATH_TO_FROZEN_GRAPH = os.path.join(MODEL_NAME, 'frozen_inference_graph.pb')
 
 	# List of the strings that is used to add correct label for each box.
 	PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
-
-	#DOWNLOAD MODEL
-	opener = urllib.request.URLopener()
-	opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
-	tar_file = tarfile.open(MODEL_FILE)
-	for file in tar_file.getmembers():
-	  file_name = os.path.basename(file.name)
-	  if 'frozen_inference_graph.pb' in file_name:
-	    tar_file.extract(file, os.getcwd())
 
 	# LOAD MODEL INTO MEMORY
 	detection_graph = tf.Graph()
@@ -110,17 +96,21 @@ if __name__ == '__main__':
 	#Label Map
 	category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)
 
+
 	#DETECTION
-	# For the sake of simplicity we will use only 2 images:
-	# image1.jpg
-	# image2.jpg
+
 	# If you want to test the code with your images, just add path to the images to the TEST_IMAGE_PATHS.
-	PATH_TO_TEST_IMAGES_DIR = 'test_images'
-	TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 3) ]
+	PATH_TO_TEST_IMAGES_DIR = 'Forward_10204_1834'
+	TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'Forward_10204_1834-f-000300{}.jpg'.format(i)) for i in range(0, 10) ]
 
 	# Size, in inches, of the output images.
 	IMAGE_SIZE = (12, 8)
 
+	# Process the whole Directory
+	# for image_path in os.listdir(PATH_TO_TEST_IMAGES_DIR):
+	
+	out_lines = []
+	delim = ','
 	for image_path in TEST_IMAGE_PATHS:
 	  image = Image.open(image_path)
 	  # the array based representation of the image will be used later in order to prepare the
@@ -131,17 +121,32 @@ if __name__ == '__main__':
 	  # Actual detection.
 	  output_dict = run_inference_for_single_image(image_np, detection_graph)
 	  # Visualization of the results of a detection.
-	  vis_util.visualize_boxes_and_labels_on_image_array(
-	      image_np,
-	      output_dict['detection_boxes'],
-	      output_dict['detection_classes'],
-	      output_dict['detection_scores'],
-	      category_index,
-	      instance_masks=output_dict.get('detection_masks'),
-	      use_normalized_coordinates=True,
-	      line_thickness=8)
-	  plt.figure(figsize=IMAGE_SIZE)
-	  plt.imshow(image_np)
+	  # vis_util.visualize_boxes_and_labels_on_image_array(
+	  #     image_np,
+	  #     output_dict['detection_boxes'],
+	  #     output_dict['detection_classes'],
+	  #     output_dict['detection_scores'],
+	  #     category_index,
+	  #     instance_masks=output_dict.get('detection_masks'),
+	  #     use_normalized_coordinates=True,
+	  #     line_thickness=8)
+	  # plt.figure(figsize=IMAGE_SIZE)
+	  # plt.imshow(image_np)
+	  box_ctr = 0;
+	  box_count = output_dict['num_detections']
+	  while box_ctr < box_count :
+		  new_row = []
+		  new_row.append(image_path)
+		  new_row.append(box_ctr)
+		  new_row.append(output_dict['detection_boxes'][box_ctr])
+		  new_row.append(output_dict['detection_classes'][box_ctr])
+		  new_row.append(output_dict['detection_scores'][box_ctr])
+		  out_lines.append(new_row)
+		  box_ctr +=1
+		  print(new_row)
 
-
+	with open('detect.csv', "w") as wo :
+		for row in out_lines :
+			wo.write(delim.join(row))
+			wo.write('\n')
 
