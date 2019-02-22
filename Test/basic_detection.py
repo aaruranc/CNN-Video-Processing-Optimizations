@@ -73,6 +73,32 @@ def run_inference_for_single_image(image, graph):
         output_dict['detection_masks'] = output_dict['detection_masks'][0]
   return output_dict
 
+def update_data(output_dict, data):
+	temp = data
+	box_ctr = 0;
+	box_count = output_dict['num_detections']
+	if box_count == 0:
+	  	info = (image_path, 0, '', '', '', '', '', '')
+	  	temp.append(info)  
+	
+	while box_ctr < box_count :
+	  	xmin = output_dict['detection_boxes'][box_ctr][1]
+	  	xmax = output_dict['detection_boxes'][box_ctr][3]
+	  	ymin = output_dict['detection_boxes'][box_ctr][0]
+	  	ymax = output_dict['detection_boxes'][box_ctr][2]
+	  	obj_class = output_dict['detection_classes'][box_ctr]
+	  	obj_score = output_dict['detection_scores'][box_ctr]
+
+	  	if box_ctr == 0:
+	  		info = (image_path, box_count, obj_class, obj_score, xmin, xmax, ymin, ymax)
+	  	else:
+	  		info = ('', '', obj_class, obj_score, xmin, xmax, ymin, ymax)
+
+	  	temp.append(info)
+		box_ctr +=1
+
+	return temp
+
 
 if __name__ == '__main__':
 
@@ -109,16 +135,6 @@ if __name__ == '__main__':
 
 	# Process the whole Directory
 	# for image_path in os.listdir(PATH_TO_TEST_IMAGES_DIR):
-	
-	info = {}
-	# names = []
-	# objects = []
-	# classes = []
-	# scores = []
-	# xmin = []
-	# xmax = []
-	# ymin = []
-	# ymax = []
 
 	data = []
 	for image_path in TEST_IMAGE_PATHS:
@@ -144,28 +160,7 @@ if __name__ == '__main__':
 	  # plt.figure(figsize=IMAGE_SIZE)
 	  # plt.imshow(image_np)
 	  # print(output_dict)
-
-	  box_ctr = 0;
-	  box_count = output_dict['num_detections']
-	  if box_count == 0:
-	  	info = (image_path, 0, '', '', '', '', '', '')
-	  	data.append(info)
-	  
-	  while box_ctr < box_count :
-	  	xmin = output_dict['detection_boxes'][box_ctr][1]
-	  	xmax = output_dict['detection_boxes'][box_ctr][3]
-	  	ymin = output_dict['detection_boxes'][box_ctr][0]
-	  	ymax = output_dict['detection_boxes'][box_ctr][2]
-	  	obj_class = output_dict['detection_classes'][box_ctr]
-	  	obj_score = output_dict['detection_scores'][box_ctr]
-
-	  	if box_ctr == 0:
-	  		info = (image_path, box_count, obj_class, obj_score, xmin, xmax, ymin, ymax)
-	  	else:
-	  		info = ('', '', obj_class, obj_score, xmin, xmax, ymin, ymax)
-
-	  	data.append(info)
-		box_ctr +=1
+	  data = update_data(output_dict, data)
 	
 	cols = ['Image', 'NumDetected', 'Class', 'Score', 'xmin', 'xmax', 'ymin', 'ymax']
 	df = pd.DataFrame(data, columns=cols)
