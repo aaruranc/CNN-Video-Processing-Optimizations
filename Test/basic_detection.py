@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import os
 import six.moves.urllib as urllib
 import sys
@@ -9,7 +10,7 @@ import zipfile
 from distutils.version import StrictVersion
 from collections import defaultdict
 from io import StringIO
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 from PIL import Image
 from object_detection.utils import ops as utils_ops
 
@@ -109,9 +110,19 @@ if __name__ == '__main__':
 	# Process the whole Directory
 	# for image_path in os.listdir(PATH_TO_TEST_IMAGES_DIR):
 	
-	out_lines = []
-	delim = ','
+	info = {}
+	# names = []
+	# objects = []
+	# classes = []
+	# scores = []
+	# xmin = []
+	# xmax = []
+	# ymin = []
+	# ymax = []
+
+	data = []
 	for image_path in TEST_IMAGE_PATHS:
+	  print("image processing")
 	  image = Image.open(image_path)
 	  # the array based representation of the image will be used later in order to prepare the
 	  # result image with boxes and labels on it.
@@ -121,35 +132,41 @@ if __name__ == '__main__':
 	  # Actual detection.
 	  output_dict = run_inference_for_single_image(image_np, detection_graph)
 	  # Visualization of the results of a detection.
-	  vis_util.visualize_boxes_and_labels_on_image_array(
-	      image_np,
-	      output_dict['detection_boxes'],
-	      output_dict['detection_classes'],
-	      output_dict['detection_scores'],
-	      category_index,
-	      instance_masks=output_dict.get('detection_masks'),
-	      use_normalized_coordinates=True,
-	      line_thickness=8)
-	  plt.figure(figsize=IMAGE_SIZE)
-	  plt.imshow(image_np)
+	  # vis_util.visualize_boxes_and_labels_on_image_array(
+	  #     image_np,
+	  #     output_dict['detection_boxes'],
+	  #     output_dict['detection_classes'],
+	  #     output_dict['detection_scores'],
+	  #     category_index,
+	  #     instance_masks=output_dict.get('detection_masks'),
+	  #     use_normalized_coordinates=True,
+	  #     line_thickness=8)
+	  # plt.figure(figsize=IMAGE_SIZE)
+	  # plt.imshow(image_np)
+	  # print(output_dict)
+
 	  box_ctr = 0;
 	  box_count = output_dict['num_detections']
-	  print(output_dict)
+	  if box_count == 0:
+	  	info = (image_path, 0, '', '', '', '', '', '')
+	  	data.append(info)
+	  
 	  while box_ctr < box_count :
-		  new_row = []
-		  new_row.append(image_path)
-		  new_row.append(str(box_ctr))
-		  new_row.append(output_dict['detection_boxes'][box_ctr])
-		  new_row.append(output_dict['detection_classes'][box_ctr])
-		  new_row.append(output_dict['detection_scores'][box_ctr])
-		  out_lines.append(new_row)
-		  box_ctr +=1
-		  print(new_row)
+	  	xmin = output_dict['detection_boxes'][box_ctr][1]
+	  	xmax = output_dict['detection_boxes'][box_ctr][3]
+	  	ymin = output_dict['detection_boxes'][box_ctr][0]
+	  	ymax = output_dict['detection_boxes'][box_ctr][2]
+	  	obj_class = output_dict['detection_classes'][box_ctr]
+	  	obj_score = output_dict['detection_scores'][box_ctr]
 
-	print(out_lines)
+	  	if box_ctr == 0:
+	  		info = (image_path, box_count, obj_class, obj_score, xmin, xmax, ymin, ymax)
+	  	else:
+	  		info = ('', '', obj_class, obj_score, xmin, xmax, ymin, ymax)
 
-	# with open('detect.csv', "w") as wo :
-	# 	for row in out_lines :
-	# 		wo.write(delim.join(row))
-	# 		wo.write('\n')
-
+	  	data.append(info)
+		box_ctr +=1
+	
+	cols = ['Image', 'NumDetected', 'Class', 'Score', 'xmin', 'xmax', 'ymin', 'ymax']
+	df = pd.DataFrame(data, columns=cols)
+	df.to_csv('classified_images.csv', index=False)
