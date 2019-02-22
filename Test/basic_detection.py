@@ -9,7 +9,7 @@ import zipfile
 from distutils.version import StrictVersion
 from collections import defaultdict
 from io import StringIO
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 from PIL import Image
 from object_detection.utils import ops as utils_ops
 
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 	  while box_ctr < box_count :
 		  new_row = []
 		  new_row.append(image_path)
-		  new_row.append(box_ctr)
+		  new_row.append(str(box_ctr))
 		  new_row.append(output_dict['detection_boxes'][box_ctr])
 		  new_row.append(output_dict['detection_classes'][box_ctr])
 		  new_row.append(output_dict['detection_scores'][box_ctr])
