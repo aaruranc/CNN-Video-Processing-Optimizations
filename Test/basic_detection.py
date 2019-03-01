@@ -73,12 +73,29 @@ def run_inference_for_single_image(image, graph):
         output_dict['detection_masks'] = output_dict['detection_masks'][0]
   return output_dict
 
+def image_list(images, dummy_text, PATH_TO_TEST_IMAGES_DIR):
+	TEST_IMAGE_PATHS = []
+	count = 1
+	while count < images:
+		length = len(str(count))
+		dummy_num = ''
+		if length < 5:
+			num = 5 - length
+			while num != 0:
+				dummy_num = dummy_num + '0'
+				num = num - 1
+		filename = dummy_text + dummy_num + str(count) + '.jpg'
+		TEST_IMAGE_PATHS.append(os.path.join(PATH_TO_TEST_IMAGES_DIR, filename))
+		count = count + 1
+	return TEST_IMAGE_PATHS
+
+
 def update_data(output_dict, data):
 	temp = data
 	box_ctr = 0;
 	box_count = output_dict['num_detections']
 	if box_count == 0:
-	  	info = (image_path, 0, '', '', '', '', '', '')
+	  	info = (image_path[-11:-4], 0, '', '', '', '', '', '')
 	  	temp.append(info)  
 	
 	while box_ctr < box_count :
@@ -90,7 +107,7 @@ def update_data(output_dict, data):
 	  	obj_score = output_dict['detection_scores'][box_ctr]
 
 	  	if box_ctr == 0:
-	  		info = (image_path, box_count, obj_class, obj_score, xmin, xmax, ymin, ymax)
+	  		info = (image_path[-11:-4], box_count, obj_class, obj_score, xmin, xmax, ymin, ymax)
 	  	else:
 	  		info = ('', '', obj_class, obj_score, xmin, xmax, ymin, ymax)
 
@@ -125,10 +142,13 @@ if __name__ == '__main__':
 
 
 	#DETECTION
-
-	# If you want to test the code with your images, just add path to the images to the TEST_IMAGE_PATHS.
+	#  0000001 - 0015349
+	# First Run started at 2:24 and ended at ____ ( minutes)
+	images = 15350
+	dummy_text = 'Forward_10204_1834-f-00'
 	PATH_TO_TEST_IMAGES_DIR = 'Forward_10204_1834'
-	TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'Forward_10204_1834-f-000300{}.jpg'.format(i)) for i in range(0, 10) ]
+	TEST_IMAGE_PATHS = image_list(images, dummy_text, PATH_TO_TEST_IMAGES_DIR)
+	print(TEST_IMAGE_PATHS)
 
 	# Size, in inches, of the output images.
 	IMAGE_SIZE = (12, 8)
@@ -137,8 +157,10 @@ if __name__ == '__main__':
 	# for image_path in os.listdir(PATH_TO_TEST_IMAGES_DIR):
 
 	data = []
+	count = 1
 	for image_path in TEST_IMAGE_PATHS:
-	  print("image processing")
+	  print("image" + str(count) + " processing")
+	  print(str(float(100 * count) / 15350) + "%")
 	  image = Image.open(image_path)
 	  # the array based representation of the image will be used later in order to prepare the
 	  # result image with boxes and labels on it.
@@ -161,6 +183,7 @@ if __name__ == '__main__':
 	  # plt.imshow(image_np)
 	  # print(output_dict)
 	  data = update_data(output_dict, data)
+	  count = count + 1
 	
 	cols = ['Image', 'NumDetected', 'Class', 'Score', 'xmin', 'xmax', 'ymin', 'ymax']
 	df = pd.DataFrame(data, columns=cols)
