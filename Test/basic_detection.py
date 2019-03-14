@@ -143,7 +143,8 @@ if __name__ == '__main__':
 
 	#DETECTION
 	#  0000001 - 0015349
-	# First Run started at 2:24 and ended at ____ ( minutes)
+    # First Run started at 2:24 and ended at 12:25 (1201 minutes)
+    # Trimmed images are from 2524 - 15290
 	images = 15350
 	dummy_text = 'Forward_10204_1834-f-00'
 	PATH_TO_TEST_IMAGES_DIR = 'Forward_10204_1834'
